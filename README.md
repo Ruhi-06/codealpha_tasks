@@ -1,4 +1,3 @@
-# codealpha_tasks
 # CodeAlpha Python Programming Internship 
 
 Welcome to my official repository for the **CodeAlpha Python Programming Internship**. This repository contains advanced, GUI-based Python applications developed as part of the hands-on internship program.
@@ -30,4 +29,4 @@ CodeAlpha is a software development company empowering students to master Python
 
 1. **Clone the Repository:**
    ```bash
-   git clone [https://github.com/YourUsername/CodeAlpha_ProjectName.git](https://github.com/YourUsername/CodeAlpha_ProjectName.git)
+   git clone https://github.com/Ruhi-06/codealpha_tasks.git
