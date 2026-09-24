@@ -1,0 +1,232 @@
+import os
+import shutil
+import re
+import requests
+import tkinter as tk
+from tkinter import messagebox, filedialog
+
+class AutomationDashboard:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("CodeAlpha - Task Automation Dashboard")
+        self.root.geometry("750x650")
+        self.root.configure(bg="#0A192F") # Modern deep navy theme
+
+        self.create_main_menu()
+
+    def clear_screen(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+    def create_main_menu(self):
+        self.clear_screen()
+
+        # Header Title
+        title = tk.Label(self.root, text="⚙️ CodeAlpha Task Automation Hub", font=("Arial", 22, "bold"), bg="#0A192F", fg="#64FFDA")
+        title.pack(pady=25)
+
+        subtitle = tk.Label(self.root, text="Select an Automation Tool to Execute:", font=("Arial", 13), bg="#0A192F", fg="#8892B0")
+        subtitle.pack(pady=5)
+
+        # Dashboard Action Cards / Buttons
+        tools = [
+            ("📁 1. JPG File Mover Automation", self.open_jpg_mover),
+            ("📧 2. Email Address Extractor", self.open_email_extractor),
+            ("🌐 3. Web Page Title Scraper", self.open_web_scraper)
+        ]
+
+        for text, command in tools:
+            btn = tk.Button(self.root, text=text, font=("Arial", 13, "bold"), bg="#172A45", fg="#64FFDA",
+                            activebackground="#64FFDA", activeforeground="#0A192F",
+                            width=35, height=2, bd=0, relief="flat", cursor="hand2", command=command)
+            btn.pack(pady=15)
+
+        # Footer info
+        footer = tk.Label(self.root, text="Python Internship Task 3 | Built with Tkinter & Built-in Modules", font=("Arial", 9, "italic"), bg="#0A192F", fg="#4A5568")
+        footer.pack(side=tk.BOTTOM, pady=20)
+
+    # ==========================================
+    # TOOL 1: JPG FILE MOVER AUTOMATION
+    # ==========================================
+    def open_jpg_mover(self):
+        self.clear_screen()
+
+        tk.Label(self.root, text="📁 JPG File Mover Automation", font=("Arial", 20, "bold"), bg="#0A192F", fg="#64FFDA").pack(pady=20)
+        tk.Label(self.root, text="Automatically scan a folder and move all .jpg files to a destination folder.", font=("Arial", 11), bg="#0A192F", fg="#8892B0").pack(pady=5)
+
+        # Frame for controls
+        frame = tk.Frame(self.root, bg="#0A192F")
+        frame.pack(pady=20)
+
+        self.src_path = tk.StringVar()
+        self.dest_path = tk.StringVar()
+
+        tk.Label(frame, text="Source Folder:", font=("Arial", 11, "bold"), bg="#0A192F", fg="white").grid(row=0, column=0, sticky="w", pady=5)
+        tk.Entry(frame, textvariable=self.src_path, width=40, font=("Arial", 11)).grid(row=0, column=1, padx=10, pady=5)
+        tk.Button(frame, text="Browse", bg="#64FFDA", fg="#0A192F", font=("Arial", 10, "bold"), command=lambda: self.src_path.set(filedialog.askdirectory())).grid(row=0, column=2, pady=5)
+
+        tk.Label(frame, text="Destination Folder:", font=("Arial", 11, "bold"), bg="#0A192F", fg="white").grid(row=1, column=0, sticky="w", pady=5)
+        tk.Entry(frame, textvariable=self.dest_path, width=40, font=("Arial", 11)).grid(row=1, column=1, padx=10, pady=5)
+        tk.Button(frame, text="Browse", bg="#64FFDA", fg="#0A192F", font=("Arial", 10, "bold"), command=lambda: self.dest_path.set(filedialog.askdirectory())).grid(row=1, column=2, pady=5)
+
+        # Action Buttons
+        btn_frame = tk.Frame(self.root, bg="#0A192F")
+        btn_frame.pack(pady=20)
+
+        tk.Button(btn_frame, text="🚀 Run Script", font=("Arial", 12, "bold"), bg="#10B981", fg="white", width=15, height=2, bd=0, command=self.execute_jpg_mover).pack(side=tk.LEFT, padx=10)
+        tk.Button(btn_frame, text="🔙 Back to Menu", font=("Arial", 12, "bold"), bg="#EF4444", fg="white", width=15, height=2, bd=0, command=self.create_main_menu).pack(side=tk.LEFT, padx=10)
+
+        # Log Output Box
+        self.log_box1 = tk.Text(self.root, height=10, width=75, font=("Courier", 10), bg="#172A45", fg="#64FFDA")
+        self.log_box1.pack(pady=10)
+
+    def execute_jpg_mover(self):
+        src = self.src_path.get()
+        dest = self.dest_path.get()
+        self.log_box1.delete("1.0", tk.END)
+
+        if not src or not dest:
+            messagebox.showerror("Error", "Please select both source and destination folders!")
+            return
+
+        if not os.path.exists(dest):
+            os.makedirs(dest)
+
+        moved_count = 0
+        try:
+            for filename in os.listdir(src):
+                if filename.lower().endswith(('.jpg', '.jpeg')):
+                    src_file = os.path.join(src, filename)
+                    dest_file = os.path.join(dest, filename)
+                    shutil.move(src_file, dest_file)
+                    self.log_box1.insert(tk.END, f"Moved: {filename}\n")
+                    moved_count += 1
+
+            self.log_box1.insert(tk.END, f"\n[SUCCESS] Successfully moved {moved_count} JPG file(s)!")
+            messagebox.showinfo("Success", f"Successfully moved {moved_count} JPG file(s)!")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
+    # ==========================================
+    # TOOL 2: EMAIL ADDRESS EXTRACTOR
+    # ==========================================
+    def open_email_extractor(self):
+        self.clear_screen()
+
+        tk.Label(self.root, text="📧 Email Address Extractor", font=("Arial", 20, "bold"), bg="#0A192F", fg="#64FFDA").pack(pady=20)
+        tk.Label(self.root, text="Extract all valid email addresses from a source text file using RegEx.", font=("Arial", 11), bg="#0A192F", fg="#8892B0").pack(pady=5)
+
+        frame = tk.Frame(self.root, bg="#0A192F")
+        frame.pack(pady=20)
+
+        self.input_file_path = tk.StringVar()
+
+        tk.Label(frame, text="Select Text File:", font=("Arial", 11, "bold"), bg="#0A192F", fg="white").grid(row=0, column=0, sticky="w", pady=5)
+        tk.Entry(frame, textvariable=self.input_file_path, width=40, font=("Arial", 11)).grid(row=0, column=1, padx=10, pady=5)
+        tk.Button(frame, text="Browse", bg="#64FFDA", fg="#0A192F", font=("Arial", 10, "bold"), command=lambda: self.input_file_path.set(filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")]))).grid(row=0, column=2, pady=5)
+
+        btn_frame = tk.Frame(self.root, bg="#0A192F")
+        btn_frame.pack(pady=20)
+
+        tk.Button(btn_frame, text="🚀 Extract Emails", font=("Arial", 12, "bold"), bg="#10B981", fg="white", width=15, height=2, bd=0, command=self.execute_email_extractor).pack(side=tk.LEFT, padx=10)
+        tk.Button(btn_frame, text="🔙 Back to Menu", font=("Arial", 12, "bold"), bg="#EF4444", fg="white", width=15, height=2, bd=0, command=self.create_main_menu).pack(side=tk.LEFT, padx=10)
+
+        self.log_box2 = tk.Text(self.root, height=10, width=75, font=("Courier", 10), bg="#172A45", fg="#64FFDA")
+        self.log_box2.pack(pady=10)
+
+    def execute_email_extractor(self):
+        filepath = self.input_file_path.get()
+        self.log_box2.delete("1.0", tk.END)
+
+        if not filepath:
+            messagebox.showerror("Error", "Please select a valid text file!")
+            return
+
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # RegEx pattern for extracting emails
+            email_pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
+            emails = sorted(list(set(re.findall(email_pattern, content))))
+
+            output_filename = "extracted_emails.txt"
+            with open(output_filename, "w", encoding="utf-8") as out:
+                for email in emails:
+                    out.write(email + "\n")
+
+            self.log_box2.insert(tk.END, f"Found {len(emails)} unique email(s):\n")
+            for email in emails:
+                self.log_box2.insert(tk.END, f" - {email}\n")
+            self.log_box2.insert(tk.END, f"\n[SUCCESS] Saved cleanly to '{output_filename}'!")
+            messagebox.showinfo("Success", f"Extracted {len(emails)} email(s) and saved to '{output_filename}'!")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
+    # ==========================================
+    # TOOL 3: WEB PAGE TITLE SCRAPER
+    # ==========================================
+    def open_web_scraper(self):
+        self.clear_screen()
+
+        tk.Label(self.root, text="🌐 Web Page Title Scraper", font=("Arial", 20, "bold"), bg="#0A192F", fg="#64FFDA").pack(pady=20)
+        tk.Label(self.root, text="Scrape the title tag of any active public website URL.", font=("Arial", 11), bg="#0A192F", fg="#8892B0").pack(pady=5)
+
+        frame = tk.Frame(self.root, bg="#0A192F")
+        frame.pack(pady=20)
+
+        self.url_input = tk.StringVar(value="https://www.codealpha.tech")
+
+        tk.Label(frame, text="Website URL:", font=("Arial", 11, "bold"), bg="#0A192F", fg="white").grid(row=0, column=0, sticky="w", pady=5)
+        tk.Entry(frame, textvariable=self.url_input, width=45, font=("Arial", 11)).grid(row=0, column=1, padx=10, pady=5)
+
+        btn_frame = tk.Frame(self.root, bg="#0A192F")
+        btn_frame.pack(pady=20)
+
+        tk.Button(btn_frame, text="🚀 Scrape Title", font=("Arial", 12, "bold"), bg="#10B981", fg="white", width=15, height=2, bd=0, command=self.execute_web_scraper).pack(side=tk.LEFT, padx=10)
+        tk.Button(btn_frame, text="🔙 Back to Menu", font=("Arial", 12, "bold"), bg="#EF4444", fg="white", width=15, height=2, bd=0, command=self.create_main_menu).pack(side=tk.LEFT, padx=10)
+
+        self.log_box3 = tk.Text(self.root, height=10, width=75, font=("Courier", 10), bg="#172A45", fg="#64FFDA")
+        self.log_box3.pack(pady=10)
+
+    def execute_web_scraper(self):
+        url = self.url_input.get().strip()
+        self.log_box3.delete("1.0", tk.END)
+
+        if not url:
+            messagebox.showerror("Error", "Please enter a valid URL!")
+            return
+
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(url, headers=headers, timeout=5)
+            
+            if response.status_code == 200:
+                html_content = response.text
+                # Extract title tag using Regular Expressions
+                match = re.search(r'<title>(.*?)</title>', html_content, re.IGNORECASE | re.DOTALL)
+                
+                if match:
+                    page_title = match.group(1).strip()
+                    # Clean any HTML entities/newlines if present
+                    page_title = re.sub(r'\s+', ' ', page_title)
+                    
+                    # Save result to a file
+                    with open("scraped_title.txt", "w", encoding="utf-8") as f:
+                        f.write(f"URL: {url}\nTitle: {page_title}")
+
+                    self.log_box3.insert(tk.END, f"URL Scraped: {url}\n")
+                    self.log_box3.insert(tk.END, f"Page Title: {page_title}\n\n")
+                    self.log_box3.insert(tk.END, "[SUCCESS] Saved title to 'scraped_title.txt'!")
+                    messagebox.showinfo("Success", f"Title Scraped: {page_title}")
+                else:
+                    self.log_box3.insert(tk.END, "[ERROR] <title> tag not found on this webpage.")
+            else:
+                messagebox.showerror("Error", f"Failed to fetch page. HTTP Status Code: {response.status_code}")
+        except Exception as e:
+            messagebox.showerror("Connection Error", f"Could not connect to URL: {str(e)}")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = AutomationDashboard(root)
+    root.mainloop()
