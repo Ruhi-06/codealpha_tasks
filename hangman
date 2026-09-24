@@ -1,0 +1,165 @@
+import random
+import tkinter as tk
+
+class HangmanGUI:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("CodeAlpha - Advanced Hangman Game")
+        self.root.geometry("600x680")
+        self.root.configure(bg="#0A192F") # Modern deep navy background
+
+        # Expanded word banks (20+ elements each)
+        self.categories = {
+            "Computer Science": [
+                "python", "algorithm", "database", "network", "software", "compiler", 
+                "debugger", "tester", "developer", "framework", "variable", "function", 
+                "syntax", "backend", "frontend", "security", "server", "storage", 
+                "protocol", "interface", "loop", "integer", "string", "boolean"
+            ],
+            "Animals": [
+                "elephant", "kangaroo", "dolphin", "penguin", "cheetah", "giraffe", 
+                "crocodile", "donkey", "tiger", "lion", "monkey", "zebra", 
+                "panther", "leopard", "gorilla", "chimpanzee", "rabbit", "squirrel", 
+                "hamster", "tortoise", "flamingo", "octopus", "hedgehog"
+            ],
+            "Geography": [
+                "brazil", "japan", "germany", "australia", "canada", "egypt", 
+                "earth", "ocean", "soil", "mountain", "desert", "river", 
+                "volcano", "island", "continent", "valley", "glacier", "forest", 
+                "plateau", "canyon", "peninsula", "canyon", "tundra"
+            ]
+        }
+
+        self.word = ""
+        self.guessed_letters = set()
+        self.incorrect_guesses = 0
+        self.max_incorrect = 6
+
+        self.create_category_screen()
+
+    def clear_screen(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
+    def create_category_screen(self):
+        self.clear_screen()
+        
+        title = tk.Label(self.root, text="🎮 CodeAlpha Hangman", font=("Arial", 24, "bold"), bg="#0A192F", fg="#64FFDA")
+        title.pack(pady=35)
+
+        subtitle = tk.Label(self.root, text="Select a Topic Category to Play", font=("Arial", 14), bg="#0A192F", fg="#8892B0")
+        subtitle.pack(pady=10)
+
+        for cat in self.categories.keys():
+            btn = tk.Button(self.root, text=cat, font=("Arial", 14, "bold"), bg="#172A45", fg="#64FFDA", 
+                            activebackground="#64FFDA", activeforeground="#0A192F",
+                            width=22, height=2, bd=0, relief="flat", cursor="hand2",
+                            command=lambda c=cat: self.start_game(c))
+            btn.pack(pady=12)
+
+    def start_game(self, category):
+        self.word = random.choice(self.categories[category])
+        self.guessed_letters = set()
+        self.incorrect_guesses = 0
+        self.create_game_screen(category)
+
+    def create_game_screen(self, category):
+        self.clear_screen()
+
+        # Header info
+        self.cat_label = tk.Label(self.root, text=f"Topic: {category}", font=("Arial", 12, "italic"), bg="#0A192F", fg="#64FFDA")
+        self.cat_label.pack(pady=10)
+
+        self.lives_label = tk.Label(self.root, text=f"❤️ Lives Remaining: {self.max_incorrect - self.incorrect_guesses}", font=("Arial", 13, "bold"), bg="#0A192F", fg="#FF6B6B")
+        self.lives_label.pack(pady=5)
+
+        # Word display (Hidden letters)
+        self.word_display = tk.Label(self.root, text=self.get_display_word(), font=("Courier", 30, "bold"), bg="#0A192F", fg="#FFD700")
+        self.word_display.pack(pady=35)
+
+        # Keyboard frame for letter buttons
+        self.keyboard_frame = tk.Frame(self.root, bg="#0A192F")
+        self.keyboard_frame.pack(pady=10)
+
+        self.letter_buttons = {}
+        alphabet = "abcdefghijklmnopqrstuvwxyz"
+        
+        row_val = 0
+        col_val = 0
+        for char in alphabet:
+            btn = tk.Button(self.keyboard_frame, text=char.upper(), font=("Arial", 11, "bold"), width=4, height=2,
+                            bg="#172A45", fg="#E6F1FF", activebackground="#64FFDA", activeforeground="#0A192F",
+                            bd=0, command=lambda l=char: self.guess_letter(l))
+            btn.grid(row=row_val, column=col_val, padx=4, pady=4)
+            self.letter_buttons[char] = btn
+            col_val += 1
+            if col_val > 6:
+                col_val = 0
+                row_val += 1
+
+        # Control buttons (Hint & Main Menu)
+        control_frame = tk.Frame(self.root, bg="#0A192F")
+        control_frame.pack(pady=25)
+
+        self.hint_btn = tk.Button(control_frame, text="💡 Get Hint", font=("Arial", 11, "bold"), bg="#FFD700", fg="#0A192F", width=12, height=1, bd=0, command=self.use_hint)
+        self.hint_btn.pack(side=tk.LEFT, padx=12)
+
+        quit_btn = tk.Button(control_frame, text="🚪 Main Menu", font=("Arial", 11, "bold"), bg="#FF6B6B", fg="white", width=12, height=1, bd=0, command=self.create_category_screen)
+        quit_btn.pack(side=tk.LEFT, padx=12)
+
+    def get_display_word(self):
+        return " ".join([l if l in self.guessed_letters else "_" for l in self.word])
+
+    def guess_letter(self, letter):
+        self.guessed_letters.add(letter)
+        self.letter_buttons[letter].config(state=tk.DISABLED, bg="#233554", fg="#8892B0")
+
+        if letter in self.word:
+            self.word_display.config(text=self.get_display_word())
+            if "_" not in self.word_display.cget("text").replace(" ", ""):
+                self.show_popup("Victory!", f"🎉 AMAZING! 🎉\n\nYou successfully guessed\nthe word: '{self.word.upper()}'", "#10B981", "Play Again 🚀")
+        else:
+            self.incorrect_guesses += 1
+            self.lives_label.config(text=f"❤️ Lives Remaining: {self.max_incorrect - self.incorrect_guesses}")
+            if self.incorrect_guesses >= self.max_incorrect:
+                self.show_popup("Game Over", f"💀 GAME OVER! 💀\n\nYou ran out of lives!\nThe secret word was: '{self.word.upper()}'", "#EF4444", "Try Again 🔄")
+
+    def use_hint(self):
+        unguessed = [l for l in self.word if l not in self.guessed_letters]
+        if unguessed:
+            hint_letter = random.choice(unguessed)
+            self.guess_letter(hint_letter)
+            self.hint_btn.config(state=tk.DISABLED, bg="#233554")
+
+    def show_popup(self, title, message, bg_color, btn_text):
+        popup = tk.Toplevel(self.root)
+        popup.title(title)
+        
+        # Popup dimensions
+        pw, ph = 420, 280
+        
+        # Calculate center position relative to the main root window
+        self.root.update_idletasks()
+        root_x = self.root.winfo_rootx()
+        root_y = self.root.winfo_rooty()
+        root_w = self.root.winfo_width()
+        root_h = self.root.winfo_height()
+        
+        x = root_x + (root_w - pw) // 2
+        y = root_y + (root_h - ph) // 2
+        
+        popup.geometry(f"{pw}x{ph}+{x}+{y}")
+        popup.configure(bg=bg_color)
+        popup.transient(self.root)
+        popup.grab_set()
+
+        # Content inside popup
+        tk.Label(popup, text=message, font=("Arial", 13, "bold"), bg=bg_color, fg="white", justify="center").pack(pady=40)
+
+        btn = tk.Button(popup, text=btn_text, font=("Arial", 12, "bold"), bg="white", fg=bg_color, width=16, height=2, bd=0, cursor="hand2", command=lambda: [popup.destroy(), self.create_category_screen()])
+        btn.pack(pady=10)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = HangmanGUI(root)
+    root.mainloop()
